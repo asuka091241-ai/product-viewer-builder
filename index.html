@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>3D Viewer Builder</title>
+    <link rel="icon" href="data:," />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css?v=20260704-panel-columns-5" />
+    <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://cdn.jsdelivr.net/npm/three@0.166.1/build/three.module.js",
+          "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.166.1/examples/jsm/"
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="workspace">
+        <div class="masthead">
+          <p>Product Viewer Studio</p>
+          <h1>3D 展示生成器</h1>
+        </div>
+
+        <section class="form-grid">
+          <label>
+            <span>产品名称</span>
+            <input id="product-name" type="text" value="Product 3D" />
+          </label>
+
+          <label>
+            <span>展示说明</span>
+            <input id="product-summary" type="text" value="加密模型展示网页，可旋转、缩放、切换材质。" />
+          </label>
+
+          <label>
+            <span>输出文件名</span>
+            <input id="output-name" type="text" value="product-viewer" />
+          </label>
+
+          <label>
+            <span>模型显示大小</span>
+            <input id="model-size" type="number" value="3.25" min="0.5" max="20" step="0.05" />
+          </label>
+
+          <button class="secondary-button import-button" type="button" id="reimport-model">重新导入模型</button>
+        </section>
+
+        <section class="editor-panel" id="editor-panel">
+          <div class="section-title">
+            <span>展示编辑</span>
+          </div>
+          <div class="editor-grid">
+            <div class="part-list" id="part-list">
+              <div class="part-list-empty">
+                <strong>模型部件列表</strong>
+                <small>导入模型后显示可编辑部件</small>
+              </div>
+            </div>
+            <div class="preview-stage">
+              <canvas id="preview-canvas" aria-label="Model preview"></canvas>
+              <canvas class="axis-widget" id="axis-canvas" aria-label="Axis preview"></canvas>
+              <label class="dropzone" id="dropzone">
+                <input id="model-input" type="file" accept=".obj,.glb,.gltf" />
+                <span class="drop-icon">+</span>
+                <strong id="file-title">添加模型</strong>
+                <small id="file-meta">OBJ / GLB / GLTF</small>
+              </label>
+            </div>
+            <div class="part-editor">
+              <section class="editor-card">
+                <div class="section-title">
+                  <span>部件</span>
+                </div>
+                <label>
+                  <span>当前部件</span>
+                  <input id="selected-part-name" type="text" value="未选择" readonly />
+                </label>
+                <label class="checkbox-row">
+                  <input id="part-visible" type="checkbox" checked />
+                  <span>显示该部件</span>
+                </label>
+              </section>
+
+              <section class="editor-card">
+                <div class="section-title">
+                  <span>材质</span>
+                </div>
+                <label>
+                  <span>材质模式</span>
+                  <select id="material-mode">
+                    <option value="original">原材质</option>
+                    <option value="custom">自定义</option>
+                    <option value="preset">预设</option>
+                  </select>
+                </label>
+                <p class="mode-note" id="material-note">使用模型文件自带材质。</p>
+                <input id="material-preset" type="hidden" value="mattePlastic" />
+                <div class="preset-grid is-hidden" id="preset-grid"></div>
+                <label class="checkbox-row preset-tune is-hidden" id="preset-tune-row">
+                  <input id="preset-tune-enabled" type="checkbox" />
+                  <span>微调当前预设</span>
+                </label>
+
+                <div class="material-controls is-hidden" id="material-controls">
+                  <div class="mini-grid">
+                    <label>
+                      <span>颜色</span>
+                      <input id="part-color" type="color" value="#6f7f8f" />
+                    </label>
+                  </div>
+
+                  <label>
+                    <span>金属度 <b id="metalness-value">0.38</b></span>
+                    <input id="metalness" type="range" min="0" max="1" step="0.01" value="0.38" />
+                  </label>
+
+                  <label>
+                    <span>粗糙度 <b id="roughness-value">0.48</b></span>
+                    <input id="roughness" type="range" min="0" max="1" step="0.01" value="0.48" />
+                  </label>
+
+                  <label>
+                    <span>透明度 <b id="opacity-value">1.00</b></span>
+                    <input id="opacity" type="range" min="0" max="1" step="0.01" value="1" />
+                  </label>
+                </div>
+              </section>
+
+              <section class="editor-card">
+                <div class="section-title">
+                  <span>位置</span>
+                </div>
+                <label class="wide-field">
+                  <span>编辑位置</span>
+                  <select id="offset-target">
+                    <option value="start">初始位置</option>
+                    <option value="end" selected>最终展开位置</option>
+                  </select>
+                </label>
+                <div class="auto-explode-tools wide-field" id="auto-explode-tools">
+                  <button class="secondary-button" id="auto-arrange-explode" type="button">自动展开位置</button>
+                  <button class="secondary-button is-hidden" id="apply-auto-explode" type="button">应用为手动位置</button>
+                  <button class="secondary-button is-hidden" id="cancel-auto-explode" type="button">取消自动展开</button>
+                  <label class="auto-explode-detail is-hidden" id="auto-explode-detail">
+                    <span>展开程度 <b id="auto-explode-strength-value">1.00</b></span>
+                    <input id="auto-explode-strength" type="range" min="0" max="1" step="0.01" value="1" />
+                  </label>
+                </div>
+                <label>
+                  <span>展开 X <b id="offset-x-value">0</b></span>
+                  <div class="range-with-reset">
+                    <input id="offset-x" type="range" min="-20" max="20" step="0.05" value="0" />
+                    <button class="axis-reset" type="button" data-reset-axis="x" aria-label="重置 X">
+                      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v6h6"/></svg>
+                    </button>
+                  </div>
+                </label>
+
+                <label>
+                  <span>展开 Y <b id="offset-y-value">0</b></span>
+                  <div class="range-with-reset">
+                    <input id="offset-y" type="range" min="-20" max="20" step="0.05" value="0" />
+                    <button class="axis-reset" type="button" data-reset-axis="y" aria-label="重置 Y">
+                      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v6h6"/></svg>
+                    </button>
+                  </div>
+                </label>
+
+                <label>
+                  <span>展开 Z <b id="offset-z-value">0</b></span>
+                  <div class="range-with-reset">
+                    <input id="offset-z" type="range" min="-20" max="20" step="0.05" value="0" />
+                    <button class="axis-reset" type="button" data-reset-axis="z" aria-label="重置 Z">
+                      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v6h6"/></svg>
+                    </button>
+                  </div>
+                </label>
+
+                <label class="wide-field">
+                  <span>沿法线 <b id="offset-normal-value">0</b></span>
+                  <div class="range-with-reset">
+                    <input id="offset-normal" type="range" min="-20" max="20" step="0.05" value="0" />
+                    <button class="axis-reset" type="button" data-reset-axis="normal" aria-label="重置沿法线">
+                      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v6h6"/></svg>
+                    </button>
+                  </div>
+                </label>
+              </section>
+            </div>
+          </div>
+        </section>
+      </section>
+
+      <aside class="side-panel">
+        <div class="panel-column panel-column-main">
+          <section class="lighting-section">
+            <div class="section-title">
+              <span>灯光预设</span>
+            </div>
+            <select id="light-preset">
+              <option value="none" selected>无灯光</option>
+              <option value="studioSoft">影棚柔光</option>
+              <option value="metalShowcase">金属高光</option>
+              <option value="coolTech">冷色科技</option>
+              <option value="warmInterior">暖色室内</option>
+              <option value="highContrast">高对比展示</option>
+            </select>
+            <label class="light-intensity-row">
+              <span>灯光强度 <b id="light-intensity-value">1.00</b></span>
+              <input id="light-intensity" type="range" min="0" max="3" step="0.05" value="1" />
+            </label>
+            <label class="hdri-source-row">
+              <span>HDRI 环境</span>
+              <select id="hdri-source">
+                <option value="none">无 HDRI</option>
+                <option value="default" selected>默认棚拍 HDRI</option>
+                <option value="brownStudio">暖调摄影棚</option>
+                <option value="whiteStudio">白色柔光棚</option>
+                <option value="sunset">威尼斯日落</option>
+              </select>
+            </label>
+            <label class="checkbox-row hdri-background-row">
+              <input id="hdri-background-enabled" type="checkbox" />
+              <span>显示 HDRI 背景</span>
+            </label>
+            <label class="inline-range-row">
+              <span>背景模糊度 <b id="hdri-background-blur-value">0.72</b></span>
+              <input id="hdri-background-blur" type="range" min="0" max="1" step="0.01" value="0.72" />
+            </label>
+            <label class="inline-range-row">
+              <span>HDRI 强度 <b id="hdri-intensity-value">2.20</b></span>
+              <input id="hdri-intensity" type="range" min="0" max="4" step="0.05" value="2.2" />
+            </label>
+            <small class="field-note" id="hdri-status">默认棚拍 HDRI</small>
+          </section>
+        </div>
+
+        <div class="panel-column panel-column-side">
+          <section class="settings-section">
+            <div class="section-title">
+              <span>设置</span>
+            </div>
+            <label class="checkbox-row">
+              <input id="auto-rotate" type="checkbox" checked />
+              <span>默认自动旋转</span>
+            </label>
+            <label class="checkbox-row">
+              <input id="smooth-shading" type="checkbox" checked />
+              <span>光滑表面</span>
+            </label>
+            <label class="checkbox-row">
+              <input id="explode-enabled" type="checkbox" checked />
+              <span>客户页展开按钮</span>
+            </label>
+            <label>
+              <span>打开时状态</span>
+              <select id="explode-initial">
+                <option value="collapsed">收起</option>
+                <option value="expanded">展开</option>
+              </select>
+            </label>
+          </section>
+          <button class="secondary-button preview-button" type="button" id="preview-result">结果预览</button>
+          <button class="primary-button" type="button" id="build-button">生成展示网页 ZIP</button>
+        </div>
+        <div class="status" id="status">等待模型文件</div>
+      </aside>
+    </main>
+
+    <script src="./assets/hdri-presets.js?v=20260703-hdri-data"></script>
+    <script src="./builder.js?v=20260704-light-hdri-intensity-1"></script>
+  </body>
+</html>
