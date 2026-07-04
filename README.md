@@ -2,6 +2,8 @@
 
 一个本地运行的 Three.js 产品展示网页生成工具。导入 `.obj`、`.glb` 或 `.gltf` 模型后，可以在可视化界面里调整材质、灯光、HDRI 环境和部件展开位置，并导出一个可发给客户查看的 3D 展示网页 ZIP。
 
+项目地址：[https://github.com/asuka091241-ai/product-viewer-builder](https://github.com/asuka091241-ai/product-viewer-builder)
+
 ## 界面预览
 
 ### 材质与部件选择
