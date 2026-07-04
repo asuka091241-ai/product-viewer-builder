@@ -2239,7 +2239,35 @@ animate();`;
 }
 
 function makeReadme() {
-  return `3D 展示网页\n\n使用方式：\n1. 双击 open-directly.html 可以直接查看。\n2. 如果要发布到网站，也可以上传整个文件夹后访问 index.html。\n3. 页面会自动加载展示模型，不需要客户输入额外信息。\n\n安全边界：网页端必须解密模型才能渲染，因此这不是绝对防逆向方案。请只放展示版模型，不要放生产级源模型。\n`;
+  return `3D 展示网页使用说明
+
+一、客户直接查看
+
+双击 open-directly.html 即可查看。
+如果只是发客户看效果，优先发 open-directly.html。
+
+二、网站发布
+
+如果要上传到网站、服务器、对象存储或静态托管平台，请上传整个文件夹，然后访问 index.html。
+
+不要只单独上传 index.html。
+index.html 需要同文件夹里的 viewer.js、styles.css、config.js 和 assets 文件夹。
+
+三、文件说明
+
+open-directly.html：单文件直接查看版，适合发客户。
+index.html：网站发布版。
+viewer.js：展示逻辑。
+styles.css：展示样式。
+config.js：展示配置。
+assets/product.pkg：加密后的模型数据。
+assets/environment.hdr：展示环境光。
+
+四、安全提醒
+
+网页端 3D 最终必须在浏览器里解密和渲染模型，所以这不是绝对防逆向方案。
+对外展示时建议使用展示版模型，不要放生产级源模型、敏感尺寸或内部结构。
+`;
 }
 
 function escapeHtml(value) {
