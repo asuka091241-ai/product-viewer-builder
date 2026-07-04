@@ -45,6 +45,40 @@ const MATERIAL_PRESET_LABELS = {
   anodizedBlue: "阳极蓝",
 };
 
+const CUSTOM_MATERIAL_PRESETS_KEY = "product-viewer-custom-material-presets";
+
+function loadCustomMaterialPresets() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(CUSTOM_MATERIAL_PRESETS_KEY) || "{}");
+    Object.entries(saved).forEach(([id, preset]) => {
+      if (!id.startsWith("custom_") || !preset?.color) return;
+      MATERIAL_PRESETS[id] = {
+        color: preset.color,
+        metalness: Number(preset.metalness) || 0,
+        roughness: Number(preset.roughness) || 0,
+        opacity: Number(preset.opacity ?? 1),
+        transparent: Boolean(preset.transparent || Number(preset.opacity ?? 1) < 1),
+        clearcoat: Number(preset.clearcoat ?? 0.24),
+        clearcoatRoughness: Number(preset.clearcoatRoughness ?? 0.28),
+      };
+      MATERIAL_PRESET_LABELS[id] = String(preset.label || "自定义预设");
+    });
+  } catch (error) {
+    console.warn("Failed to load custom material presets.", error);
+  }
+}
+
+function saveCustomMaterialPresets() {
+  const saved = {};
+  Object.entries(MATERIAL_PRESETS).forEach(([id, preset]) => {
+    if (!id.startsWith("custom_")) return;
+    saved[id] = { ...preset, label: MATERIAL_PRESET_LABELS[id] || "自定义预设" };
+  });
+  localStorage.setItem(CUSTOM_MATERIAL_PRESETS_KEY, JSON.stringify(saved));
+}
+
+loadCustomMaterialPresets();
+
 const LIGHT_PRESETS = {
   none: null,
   studioSoft: { hemi: ["#ffffff", "#bcc8d0", 1.8], key: ["#ffffff", 3.8, [3.4, 5.6, 4.2]], rim: ["#8ee7df", 1.7, [-4.4, 2.6, -3.6]], warm: ["#ff8068", 20, [2.6, 1.2, 2.4]] },
@@ -68,6 +102,8 @@ const elements = {
   previewResult: document.querySelector("#preview-result"),
   status: document.querySelector("#status"),
   autoRotate: document.querySelector("#auto-rotate"),
+  autoRotateSpeed: document.querySelector("#auto-rotate-speed"),
+  autoRotateSpeedValue: document.querySelector("#auto-rotate-speed-value"),
   smoothShading: document.querySelector("#smooth-shading"),
   editorPanel: document.querySelector("#editor-panel"),
   previewCanvas: document.querySelector("#preview-canvas"),
@@ -83,6 +119,7 @@ const elements = {
   presetGrid: document.querySelector("#preset-grid"),
   presetTuneRow: document.querySelector("#preset-tune-row"),
   presetTuneEnabled: document.querySelector("#preset-tune-enabled"),
+  saveMaterialPreset: document.querySelector("#save-material-preset"),
   partColor: document.querySelector("#part-color"),
   partVisible: document.querySelector("#part-visible"),
   metalness: document.querySelector("#metalness"),
@@ -806,6 +843,7 @@ function syncPartLabels() {
   elements.offsetZValue.textContent = Number(elements.offsetZ.value).toFixed(2);
   elements.offsetNormalValue.textContent = Number(elements.offsetNormal.value).toFixed(2);
   elements.autoExplodeStrengthValue.textContent = Number(elements.autoExplodeStrength.value).toFixed(2);
+  elements.autoRotateSpeedValue.textContent = `${Number(elements.autoRotateSpeed.value).toFixed(2)}x`;
 }
 
 function syncAutoExplodeTools() {
@@ -844,6 +882,33 @@ function applyPresetDefaultsToControls(presetId) {
   elements.roughness.value = preset.roughness;
   elements.opacity.value = preset.opacity ?? 1;
   syncPartLabels();
+}
+
+function saveCurrentMaterialPreset() {
+  const label = prompt("预设名称", `自定义预设 ${Object.keys(MATERIAL_PRESETS).filter((id) => id.startsWith("custom_")).length + 1}`);
+  if (!label || !label.trim()) return;
+
+  const opacity = Number(elements.opacity.value);
+  const sourcePreset = MATERIAL_PRESETS[elements.materialPreset.value] || MATERIAL_PRESETS.mattePlastic;
+  const id = `custom_${Date.now()}`;
+  MATERIAL_PRESETS[id] = {
+    color: elements.partColor.value,
+    metalness: Number(elements.metalness.value),
+    roughness: Number(elements.roughness.value),
+    opacity,
+    transparent: opacity < 1,
+    clearcoat: Number(sourcePreset.clearcoat ?? 0.24),
+    clearcoatRoughness: Number(sourcePreset.clearcoatRoughness ?? 0.28),
+  };
+  MATERIAL_PRESET_LABELS[id] = label.trim();
+  saveCustomMaterialPresets();
+  elements.materialMode.value = "preset";
+  elements.materialPreset.value = id;
+  elements.presetTuneEnabled.checked = false;
+  applyPresetDefaultsToControls(id);
+  syncMaterialUi();
+  updateSelectedPartFromControls();
+  setStatus(`已保存材质预设：${label.trim()}`);
 }
 
 function syncMaterialUi() {
@@ -1131,6 +1196,7 @@ function collectConfig() {
     summary,
     modelSize: Number(elements.modelSize.value) || 3.25,
     autoRotate: elements.autoRotate.checked,
+    autoRotateSpeed: Number(elements.autoRotateSpeed.value) || 1,
     smoothShading: elements.smoothShading.checked,
     lightPreset: elements.lightPreset.value,
     lightIntensity: Number(elements.lightIntensity.value) || 0,
@@ -1534,6 +1600,7 @@ function makeStandaloneJs() {
   }
 
   let autoRotate = config.autoRotate;
+  const autoRotateSpeed = 0.0045 * Number(config.autoRotateSpeed ?? 1);
   let modelLoaded = false;
   const explodableMeshes = [];
   let explodeProgress = config.explodeInitial === "expanded" ? 1 : 0;
@@ -1750,7 +1817,7 @@ function makeStandaloneJs() {
 
   function animate() {
     requestAnimationFrame(animate);
-    if (autoRotate) productPivot.rotation.y += 0.0045;
+    if (autoRotate) productPivot.rotation.y += autoRotateSpeed;
     if (Math.abs(explodeProgress - explodeTarget) > 0.001) {
       explodeProgress += (explodeTarget - explodeProgress) * 0.12;
       if (Math.abs(explodeProgress - explodeTarget) < 0.001) explodeProgress = explodeTarget;
@@ -1917,6 +1984,7 @@ if (activeLightPreset) {
 }
 
 let autoRotate = config.autoRotate;
+const autoRotateSpeed = 0.0045 * Number(config.autoRotateSpeed ?? 1);
 let modelLoaded = false;
 const explodableMeshes = [];
 let explodeProgress = config.explodeInitial === "expanded" ? 1 : 0;
@@ -2136,7 +2204,7 @@ resize();
 
 function animate() {
   requestAnimationFrame(animate);
-  if (autoRotate) productPivot.rotation.y += 0.0045;
+  if (autoRotate) productPivot.rotation.y += autoRotateSpeed;
   if (Math.abs(explodeProgress - explodeTarget) > 0.001) {
     explodeProgress += (explodeTarget - explodeProgress) * 0.12;
     if (Math.abs(explodeProgress - explodeTarget) < 0.001) explodeProgress = explodeTarget;
@@ -2215,6 +2283,7 @@ elements.presetGrid.addEventListener("click", (event) => {
   applyPresetDefaultsToControls(button.dataset.presetId);
   updateSelectedPartFromControls();
 });
+elements.saveMaterialPreset.addEventListener("click", saveCurrentMaterialPreset);
 elements.partEditor.addEventListener("click", (event) => {
   const button = event.target.closest("[data-reset-axis]");
   if (!button) return;
@@ -2250,6 +2319,7 @@ elements.lightIntensity.addEventListener("input", () => {
   syncHdriBackgroundUi();
   applyLightPresetToPreview();
 });
+elements.autoRotateSpeed.addEventListener("input", syncPartLabels);
 function reapplyPreviewEnvironment() {
   syncHdriBackgroundUi();
   return applyEnvironmentToPreview()
