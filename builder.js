@@ -64,6 +64,7 @@ const elements = {
   outputName: document.querySelector("#output-name"),
   modelSize: document.querySelector("#model-size"),
   buildButton: document.querySelector("#build-button"),
+  htmlButton: document.querySelector("#html-button"),
   previewResult: document.querySelector("#preview-result"),
   status: document.querySelector("#status"),
   autoRotate: document.querySelector("#auto-rotate"),
@@ -1238,6 +1239,43 @@ async function previewResult() {
   }
 }
 
+async function buildHtmlFile() {
+  if (!state.file) {
+    setStatus("请先选择模型文件。");
+    return;
+  }
+
+  elements.htmlButton.disabled = true;
+  setStatus("正在生成 HTML 文件...");
+
+  try {
+    const modelBytes = new Uint8Array(await state.file.arrayBuffer());
+    const contentKey = randomBytes(32);
+    const encryptedModel = await encryptBytes(modelBytes, contentKey);
+    const environmentBytes = await getEnvironmentBytes();
+    const viewerConfig = collectConfig();
+    if (!environmentBytes) viewerConfig.environmentPath = "";
+
+    const security = {
+      mode: "open",
+      modelFormat: getModelFormat(state.file.name),
+      packagePath: "./assets/product.pkg",
+      modelIv: encryptedModel.iv,
+      embeddedKey: bytesToBase64(contentKey),
+    };
+
+    const html = makeStandaloneHtml(viewerConfig, security, encryptedModel.cipher, environmentBytes, modelBytes);
+    const outputName = sanitizeName(elements.outputName.value || viewerConfig.productName);
+    downloadBlob(new Blob([html], { type: "text/html;charset=utf-8" }), `${outputName}.html`);
+    setStatus(`已生成 ${outputName}.html。`);
+  } catch (error) {
+    console.error(error);
+    setStatus(error.message || "生成 HTML 失败。");
+  } finally {
+    elements.htmlButton.disabled = false;
+  }
+}
+
 function downloadBlob(blob, filename) {
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
@@ -2247,6 +2285,7 @@ elements.hdriIntensity.addEventListener("input", () => {
   }
 });
 elements.buildButton.addEventListener("click", buildPackage);
+elements.htmlButton.addEventListener("click", buildHtmlFile);
 elements.previewResult.addEventListener("click", previewResult);
 
 renderPresetGrid();
