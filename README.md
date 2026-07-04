@@ -2,6 +2,20 @@
 
 一个本地运行的 Three.js 产品展示网页生成工具。导入 `.obj`、`.glb` 或 `.gltf` 模型后，可以在可视化界面里调整材质、灯光、HDRI 环境和部件展开位置，并导出一个可发给客户查看的 3D 展示网页 ZIP。
 
+## 界面预览
+
+### 材质与部件选择
+
+![材质与部件选择](docs/images/builder-materials.png)
+
+### 展开位置、灯光和 HDRI
+
+![展开位置、灯光和 HDRI](docs/images/builder-explode-lighting.png)
+
+### 客户展示页面
+
+![客户展示页面](docs/images/viewer-page.png)
+
 ## 功能
 
 - 支持 OBJ / GLB / GLTF 模型导入
@@ -89,6 +103,9 @@ product-viewer-builder/
   styles.css
   builder.js
   PRODUCT_VIEWER_DESIGN.md
+  使用说明.txt
+  docs/
+    images/
   assets/
     hdri-presets.js
     *.hdr
