@@ -485,6 +485,12 @@ button:disabled {
   background: rgba(255, 255, 255, 0.48);
 }
 
+.save-preset-button {
+  grid-column: 1 / -1;
+  min-height: 34px;
+  font-size: 0.76rem;
+}
+
 .range-with-reset {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 30px;
@@ -689,6 +695,10 @@ button:active {
   min-width: 0;
 }
 
+.panel-column-side {
+  gap: 4px;
+}
+
 .side-panel section {
   display: grid;
   align-content: start;
@@ -766,11 +776,11 @@ button:active {
 .side-panel .settings-section {
   grid-template-columns: minmax(0, 1fr);
   align-self: start;
-  gap: 6px;
+  gap: 4px;
 }
 
 .settings-section .checkbox-row {
-  min-height: 24px;
+  min-height: 20px;
   margin-top: 0;
   padding: 0;
   grid-template-columns: 18px minmax(0, 1fr);
@@ -784,17 +794,34 @@ button:active {
 }
 
 .settings-section .checkbox-row input[type="checkbox"] {
-  width: 16px;
-  height: 16px;
+  width: 15px;
+  height: 15px;
+}
+
+.settings-range {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+}
+
+.settings-range span {
+  margin-bottom: 0;
+  font-size: 0.7rem;
+  white-space: nowrap;
+}
+
+.settings-range input[type="range"] {
+  min-height: 22px;
 }
 
 .side-panel .primary-button,
 .side-panel .preview-button,
 .side-panel .html-button {
   grid-column: auto;
-  min-height: 40px;
-  padding: 0 10px;
-  font-size: 0.8rem;
+  min-height: 30px;
+  padding: 0 8px;
+  font-size: 0.72rem;
 }
 
 .status {
