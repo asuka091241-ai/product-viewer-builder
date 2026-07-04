@@ -11,7 +11,7 @@
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="./styles.css?v=20260704-html-export-1" />
+    <link rel="stylesheet" href="./styles.css?v=20260704-presets-speed-1" />
     <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
     <script type="importmap">
       {
@@ -132,6 +132,7 @@
                     <span>透明度 <b id="opacity-value">1.00</b></span>
                     <input id="opacity" type="range" min="0" max="1" step="0.01" value="1" />
                   </label>
+                  <button class="secondary-button save-preset-button" type="button" id="save-material-preset">保存当前参数为预设</button>
                 </div>
               </section>
 
@@ -253,6 +254,10 @@
               <input id="auto-rotate" type="checkbox" checked />
               <span>默认自动旋转</span>
             </label>
+            <label class="settings-range">
+              <span>旋转速度 <b id="auto-rotate-speed-value">1.00x</b></span>
+              <input id="auto-rotate-speed" type="range" min="0.1" max="3" step="0.05" value="1" />
+            </label>
             <label class="checkbox-row">
               <input id="smooth-shading" type="checkbox" checked />
               <span>光滑表面</span>
@@ -278,6 +283,6 @@
     </main>
 
     <script src="./assets/hdri-presets.js?v=20260703-hdri-data"></script>
-    <script src="./builder.js?v=20260704-html-export-1"></script>
+    <script src="./builder.js?v=20260704-presets-speed-1"></script>
   </body>
 </html>
