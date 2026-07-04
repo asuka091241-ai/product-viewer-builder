@@ -16,6 +16,10 @@
 
 ![客户展示页面](docs/images/viewer-page.png)
 
+### 手机端展示页面
+
+![手机端展示页面](docs/images/viewer-mobile.jpg)
+
 ## 功能
 
 - 支持 OBJ / GLB / GLTF 模型导入
