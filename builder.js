@@ -1392,6 +1392,10 @@ function makeViewerHtml(title) {
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 0 1-13.7 5.7M4 12A8 8 0 0 1 17.7 6.3"/><path d="M20 5v7h-7M4 19v-7h7"/></svg>
           </button>
         </div>
+        <label class="speed-control">
+          <span>速度 <b id="viewer-rotate-speed-value">1.00x</b></span>
+          <input id="viewer-rotate-speed" type="range" min="0.1" max="3" step="0.05" value="1" />
+        </label>
       </aside>
       <div class="loading" id="loading-state"><span></span><small id="loading-message"></small></div>
     </main>
@@ -1440,6 +1444,10 @@ function makeStandaloneHtml(viewerConfig, security, cipherBytes, environmentByte
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 0 1-13.7 5.7M4 12A8 8 0 0 1 17.7 6.3"/><path d="M20 5v7h-7M4 19v-7h7"/></svg>
           </button>
         </div>
+        <label class="speed-control">
+          <span>速度 <b id="viewer-rotate-speed-value">1.00x</b></span>
+          <input id="viewer-rotate-speed" type="range" min="0.1" max="3" step="0.05" value="1" />
+        </label>
       </aside>
       <div class="loading" id="loading-state"><span></span><small id="loading-message"></small></div>
     </main>
@@ -1600,7 +1608,7 @@ function makeStandaloneJs() {
   }
 
   let autoRotate = config.autoRotate;
-  const autoRotateSpeed = 0.0045 * Number(config.autoRotateSpeed ?? 1);
+  let autoRotateSpeed = 0.0045 * Number(config.autoRotateSpeed ?? 1);
   let modelLoaded = false;
   const explodableMeshes = [];
   let explodeProgress = config.explodeInitial === "expanded" ? 1 : 0;
@@ -1791,6 +1799,16 @@ function makeStandaloneJs() {
     autoRotate = !autoRotate;
     event.currentTarget.classList.toggle("is-active", autoRotate);
   });
+  const rotateSpeedInput = document.querySelector("#viewer-rotate-speed");
+  const rotateSpeedValue = document.querySelector("#viewer-rotate-speed-value");
+  function syncRotateSpeed() {
+    const speed = Number(rotateSpeedInput.value || config.autoRotateSpeed || 1);
+    autoRotateSpeed = 0.0045 * speed;
+    rotateSpeedValue.textContent = speed.toFixed(2) + "x";
+  }
+  rotateSpeedInput.value = Number(config.autoRotateSpeed ?? 1);
+  rotateSpeedInput.addEventListener("input", syncRotateSpeed);
+  syncRotateSpeed();
 
   const explodeToggle = document.querySelector("#explode-toggle");
   if (!config.explodeEnabled) {
@@ -1836,7 +1854,7 @@ function scriptSafeJson(value) {
 }
 
 function makeViewerCss() {
-  return String.raw`:root{--ink:#12151b;--muted:#5d6674;--paper:#edf1f4;--panel:rgba(248,250,252,.78);--line:rgba(18,21,27,.14);--accent:#e14f3d;--aqua:#2ba8a1;--shadow:rgba(18,21,27,.18)}*{box-sizing:border-box}html,body{width:100%;height:100%;margin:0}body{overflow:hidden;color:var(--ink);background:linear-gradient(120deg,rgba(43,168,161,.16),transparent 34%),linear-gradient(300deg,rgba(225,79,61,.14),transparent 36%),radial-gradient(circle at 50% 110%,rgba(18,21,27,.18),transparent 34%),var(--paper);font-family:"Noto Sans SC",sans-serif}body:before{position:fixed;inset:0;pointer-events:none;content:"";background-image:linear-gradient(rgba(18,21,27,.045) 1px,transparent 1px),linear-gradient(90deg,rgba(18,21,27,.045) 1px,transparent 1px);background-size:48px 48px;mask-image:linear-gradient(to bottom,rgba(0,0,0,.4),transparent 78%)}.shell{position:relative;width:100vw;height:100svh;min-height:560px}#product-canvas{position:absolute;inset:0;display:block;width:100%;height:100%}.brand-panel{position:absolute;top:clamp(20px,4vw,44px);left:clamp(18px,5vw,56px);max-width:min(360px,calc(100vw - 36px));pointer-events:none}.kicker{margin:0 0 8px;color:var(--accent);font-family:"Space Grotesk",sans-serif;font-size:.76rem;font-weight:700;text-transform:uppercase}h1{margin:0;font-family:"Space Grotesk",sans-serif;font-size:clamp(2.2rem,5vw,4.2rem);line-height:1;letter-spacing:0}.summary{max-width:300px;margin:12px 0 0;color:var(--muted);font-size:.94rem;line-height:1.65}.control-dock{position:absolute;right:clamp(16px,4vw,54px);bottom:clamp(28px,5vw,54px);display:flex;flex-direction:column;gap:10px;padding:12px;border:1px solid var(--line);border-radius:8px;background:var(--panel);box-shadow:0 20px 70px var(--shadow);backdrop-filter:blur(18px)}.control-group{display:grid;grid-template-columns:58px repeat(var(--count,4),34px);align-items:center;gap:8px;min-height:38px}.motion-controls{grid-template-columns:58px 34px 34px}.label{color:var(--muted);font-family:"Space Grotesk",sans-serif;font-size:.72rem;font-weight:700;text-transform:uppercase}button{display:grid;place-items:center;min-height:34px;border:1px solid rgba(18,21,27,.18);border-radius:8px;background:rgba(255,255,255,.62);cursor:pointer;font:inherit;font-weight:700}.control-dock button{width:34px;height:34px;border-radius:50%;padding:0}.icon-button.is-active{border-color:var(--ink);background:#fff}.icon-button svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-linecap:round;stroke-linejoin:round;stroke-width:1.8}.loading{position:absolute;inset:0;display:grid;place-items:center;align-content:center;gap:12px;pointer-events:none;transition:opacity .24s ease}.loading.is-hidden{opacity:0}.loading span{width:38px;height:38px;border:3px solid rgba(18,21,27,.12);border-top-color:var(--accent);border-radius:50%;animation:spin .85s linear infinite}.loading small{max-width:min(360px,calc(100vw - 32px));color:var(--muted);font-size:.92rem;text-align:center}.loading.is-error{pointer-events:auto;background:rgba(238,242,245,.78);backdrop-filter:blur(14px)}.loading.is-error span{display:none}@keyframes spin{to{transform:rotate(360deg)}}@media(max-width:740px){.shell{min-height:620px}.brand-panel{top:18px;left:16px}h1{font-size:clamp(2rem,14vw,3.2rem)}.summary{max-width:260px;margin-top:10px;font-size:.88rem}.control-dock{right:14px;bottom:14px;padding:10px}.control-group{grid-template-columns:1fr repeat(var(--count,4),32px);gap:7px}.motion-controls{grid-template-columns:1fr 32px 32px}.control-dock button{width:32px;height:32px}}`;
+  return String.raw`:root{--ink:#12151b;--muted:#5d6674;--paper:#edf1f4;--panel:rgba(248,250,252,.78);--line:rgba(18,21,27,.14);--accent:#e14f3d;--aqua:#2ba8a1;--shadow:rgba(18,21,27,.18)}*{box-sizing:border-box}html,body{width:100%;height:100%;margin:0}body{overflow:hidden;color:var(--ink);background:linear-gradient(120deg,rgba(43,168,161,.16),transparent 34%),linear-gradient(300deg,rgba(225,79,61,.14),transparent 36%),radial-gradient(circle at 50% 110%,rgba(18,21,27,.18),transparent 34%),var(--paper);font-family:"Noto Sans SC",sans-serif}body:before{position:fixed;inset:0;pointer-events:none;content:"";background-image:linear-gradient(rgba(18,21,27,.045) 1px,transparent 1px),linear-gradient(90deg,rgba(18,21,27,.045) 1px,transparent 1px);background-size:48px 48px;mask-image:linear-gradient(to bottom,rgba(0,0,0,.4),transparent 78%)}.shell{position:relative;width:100vw;height:100svh;min-height:560px}#product-canvas{position:absolute;inset:0;display:block;width:100%;height:100%}.brand-panel{position:absolute;top:clamp(20px,4vw,44px);left:clamp(18px,5vw,56px);max-width:min(360px,calc(100vw - 36px));pointer-events:none}.kicker{margin:0 0 8px;color:var(--accent);font-family:"Space Grotesk",sans-serif;font-size:.76rem;font-weight:700;text-transform:uppercase}h1{margin:0;font-family:"Space Grotesk",sans-serif;font-size:clamp(2.2rem,5vw,4.2rem);line-height:1;letter-spacing:0}.summary{max-width:300px;margin:12px 0 0;color:var(--muted);font-size:.94rem;line-height:1.65}.control-dock{position:absolute;right:clamp(16px,4vw,54px);bottom:clamp(28px,5vw,54px);display:flex;flex-direction:column;gap:8px;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--panel);box-shadow:0 20px 70px var(--shadow);backdrop-filter:blur(18px)}.control-group{display:grid;grid-template-columns:58px repeat(var(--count,4),34px);align-items:center;gap:8px;min-height:38px}.motion-controls{grid-template-columns:58px 34px 34px}.speed-control{display:grid;grid-template-columns:58px minmax(110px,150px);align-items:center;gap:8px;min-height:28px}.speed-control span{color:var(--muted);font-family:"Space Grotesk",sans-serif;font-size:.68rem;font-weight:700;text-transform:uppercase}.speed-control b{color:var(--ink);font-weight:700}.speed-control input{width:100%;accent-color:var(--accent)}.label{color:var(--muted);font-family:"Space Grotesk",sans-serif;font-size:.72rem;font-weight:700;text-transform:uppercase}button{display:grid;place-items:center;min-height:34px;border:1px solid rgba(18,21,27,.18);border-radius:8px;background:rgba(255,255,255,.62);cursor:pointer;font:inherit;font-weight:700}.control-dock button{width:34px;height:34px;border-radius:50%;padding:0}.icon-button.is-active{border-color:var(--ink);background:#fff}.icon-button svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-linecap:round;stroke-linejoin:round;stroke-width:1.8}.loading{position:absolute;inset:0;display:grid;place-items:center;align-content:center;gap:12px;pointer-events:none;transition:opacity .24s ease}.loading.is-hidden{opacity:0}.loading span{width:38px;height:38px;border:3px solid rgba(18,21,27,.12);border-top-color:var(--accent);border-radius:50%;animation:spin .85s linear infinite}.loading small{max-width:min(360px,calc(100vw - 32px));color:var(--muted);font-size:.92rem;text-align:center}.loading.is-error{pointer-events:auto;background:rgba(238,242,245,.78);backdrop-filter:blur(14px)}.loading.is-error span{display:none}@keyframes spin{to{transform:rotate(360deg)}}@media(max-width:740px){.shell{min-height:620px}.brand-panel{top:18px;left:16px}h1{font-size:clamp(2rem,14vw,3.2rem)}.summary{max-width:260px;margin-top:10px;font-size:.88rem}.control-dock{right:14px;bottom:14px;padding:10px}.control-group{grid-template-columns:1fr repeat(var(--count,4),32px);gap:7px}.motion-controls{grid-template-columns:1fr 32px 32px}.speed-control{grid-template-columns:1fr minmax(92px,130px)}.control-dock button{width:32px;height:32px}}`;
 }
 
 function makeViewerJs() {
@@ -1984,7 +2002,7 @@ if (activeLightPreset) {
 }
 
 let autoRotate = config.autoRotate;
-const autoRotateSpeed = 0.0045 * Number(config.autoRotateSpeed ?? 1);
+let autoRotateSpeed = 0.0045 * Number(config.autoRotateSpeed ?? 1);
 let modelLoaded = false;
 const explodableMeshes = [];
 let explodeProgress = config.explodeInitial === "expanded" ? 1 : 0;
@@ -2178,6 +2196,16 @@ document.querySelector("#spin-toggle").addEventListener("click", (event) => {
   autoRotate = !autoRotate;
   event.currentTarget.classList.toggle("is-active", autoRotate);
 });
+const rotateSpeedInput = document.querySelector("#viewer-rotate-speed");
+const rotateSpeedValue = document.querySelector("#viewer-rotate-speed-value");
+function syncRotateSpeed() {
+  const speed = Number(rotateSpeedInput.value || config.autoRotateSpeed || 1);
+  autoRotateSpeed = 0.0045 * speed;
+  rotateSpeedValue.textContent = speed.toFixed(2) + "x";
+}
+rotateSpeedInput.value = Number(config.autoRotateSpeed ?? 1);
+rotateSpeedInput.addEventListener("input", syncRotateSpeed);
+syncRotateSpeed();
 
 const explodeToggle = document.querySelector("#explode-toggle");
 if (!config.explodeEnabled) {
