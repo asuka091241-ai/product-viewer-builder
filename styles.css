@@ -789,7 +789,8 @@ button:active {
 }
 
 .side-panel .primary-button,
-.side-panel .preview-button {
+.side-panel .preview-button,
+.side-panel .html-button {
   grid-column: auto;
   min-height: 40px;
   padding: 0 10px;
