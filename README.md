@@ -45,8 +45,6 @@
 
 这是一个纯前端本地工具，不需要安装复杂依赖。
 
-### 方式一：下载发布包
-
 1. 打开 Releases 页面：
 
 ```text
@@ -55,10 +53,9 @@ https://github.com/asuka091241-ai/product-viewer-builder/releases
 
 2. 下载最新版本里的 `product-viewer-builder.zip`。
 3. 解压 ZIP。
-4. 进入解压后的文件夹。
-5. 启动本地服务后，用浏览器打开工具页面。
+4. 双击解压后的 `index.html` 即可打开工具。
 
-Windows 可以在文件夹里运行：
+如果直接双击后浏览器环境异常，也可以使用启动脚本：
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\启动产品展示工具.ps1
@@ -76,13 +73,11 @@ python -m http.server 5182 --bind 127.0.0.1
 http://127.0.0.1:5182/
 ```
 
-### 方式二：下载源码
-
-也可以直接下载或克隆本仓库，然后用同样方式启动本地服务。
-
 ## 本地运行
 
-这个项目是纯前端工具，建议通过本地 HTTP 服务打开。
+这个项目是纯前端工具，通常直接双击 `index.html` 就能使用。
+
+也可以通过本地 HTTP 服务打开：
 
 ```powershell
 cd product-viewer-builder
