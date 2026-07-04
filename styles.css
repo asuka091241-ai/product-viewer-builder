@@ -835,6 +835,24 @@ button:active {
   box-shadow: none;
 }
 
+.credit-link {
+  position: fixed;
+  left: 50%;
+  bottom: 8px;
+  z-index: 4;
+  transform: translateX(-50%);
+  color: rgba(93, 102, 116, 0.62);
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-decoration: none;
+  transition: color 0.18s ease, opacity 0.18s ease;
+}
+
+.credit-link:hover {
+  color: rgba(16, 20, 27, 0.82);
+}
+
 .dropzone {
   position: absolute;
   top: 50%;
